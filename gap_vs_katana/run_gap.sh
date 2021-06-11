@@ -12,12 +12,25 @@ export OMP_NUM_THREADS=${THREADS}
 PRE=""
 
 for input in "kron" "urand" "twitter" "web" "road"; do
-  echo $input
+  echo "bfs:" $input
   cat $START_DIR"/GAP-${input}.start" | while read SNODE; do
     $PRE $GAPBS_DIR/bfs -f $GRAPH_DIR/${input}.sg -n3 -r${SNODE} -a > $OUT_DIR/bfs/bfs-${input}-t$THREADS-s$SNODE.out
   done
+  DELTA="1"
+  #elif [[ "${input}" == "urand" ]]; then
+  if [[ "${input}" == "road" ]]; then
+    DELTA="13"
+  fi
+  echo "sssp:" $input "," $DELTA
+  cat $START_DIR"/GAP-${input}.start" | while read SNODE; do
+    $PRE $GAPBS_DIR/sssp -f $GRAPH_DIR/${input}.wsg -n3 -d${DELTA} -r${SNODE} -a > $OUT_DIR/sssp/sssp-${input}-t$THREADS-s$SNODE.out
+  done
+
+  echo "bc: " $input
+  cat $START_DIR"/GAP-${input}.start" | while read SNODE; do
+    $PRE $GAPBS_DIR/bc -f $GRAPH_DIR/${input}.sg -i4 -n3 -r${SNODE} -a > $OUT_DIR/bc/bc-${input}-t$THREADS-s$SNODE.out
+  done
 done
-echo "DON>..."
 : '
 $PRE $GAPBS_DIR/bfs -f $GRAPH_DIR/kron.sg -n3 -a > $OUT_DIR/bfs-kron-t$THREADS.out
 echo "urand-bfs"
