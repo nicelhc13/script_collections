@@ -8,18 +8,27 @@ import time
 timer_file=sys.stderr
 
 binary_dir="/home/hlee/benchmarking/katana.binary"
-output_dir="/home/hlee/benchmarking/katana.output"
+output_dir="/home/hlee/benchmarking/katana.output.0615"
+prefix="burning_"
 
-def run_bfs(graph_path, input_args, source_node_file, trial):
+def run_bfs(graph_path, input_args, source_node_file, trial, threads):
     start_node = input_args["source_node"]
+    algo = "SyncDO"
+    flags = " --noverify"
+
+    if "road" in input_args['name']:
+        threads = 16
+        algo = "Async"
+        flags = ""
 
     if not source_node_file == "":
         if not os.path.exists(source_node_file):
             print(f"Source node file doesn't exist:", graph_path,
                   file=sys.stderr)
         timer_algo_start = time.time()
-        command = f"{binary_dir}/bfs-cpu --algo=Sync -t=96 "
-        command += f"-statFile={output_dir}/bfs_{input_args['name']}_{trial}.stats {graph_path}"
+        command = f"{binary_dir}/bfs-cpu --algo={algo} -t={threads} "
+        command += f"{flags} "
+        command += f"-statFile={output_dir}/{prefix}bfs_{input_args['name']}_{trial}.stats {graph_path}"
         command += f" --startNodesFile={source_node_file}"
         os.system(command)
         timer_algo_end = time.time()
@@ -29,8 +38,9 @@ def run_bfs(graph_path, input_args, source_node_file, trial):
               file=timer_file)
     else:
         timer_algo_start = time.time()
-        command = f"{binary_dir}/bfs-cpu --algo=Sync --startNodes={start_node} -t=96 "
-        command += f"-statFile={output_dir}/bfs_{input_args['name']}_{trial}.stats {graph_path}"
+        command = f"{binary_dir}/bfs-cpu --algo={algo} --startNodes={start_node} -t={threads} "
+        command += f"{flags} "
+        command += f"-statFile={output_dir}/{prefix}bfs_{input_args['name']}_{trial}.stats {graph_path}"
         os.system(command)
         timer_algo_end = time.time()
         print(f"Commands,", command, file=sys.stderr) 
@@ -39,40 +49,10 @@ def run_bfs(graph_path, input_args, source_node_file, trial):
               round((timer_algo_end - timer_algo_start), 2),
               file=timer_file)
 
-def run_bfs_do(graph_path, input_args, source_node_file, trial):
-    start_node = input_args["source_node"]
-
-    if not source_node_file == "":
-        if not os.path.exists(source_node_file):
-            print(f"Source node file doesn't exist:", graph_path,
-                  file=sys.stderr)
-        timer_algo_start = time.time()
-        command = f"{binary_dir}/bfs-cpu --algo=SyncDO -t=96 "
-        command += f"-statFile={output_dir}/bfs_do_{input_args['name']}_{trial}.stats {graph_path}"
-        command += f" --startNodesFile={source_node_file} --noverify"
-        os.system(command)
-        timer_algo_end = time.time()
-        print(f"Commands,", command, file=sys.stderr) 
-        print(f"BFS timer (s),",
-              round((timer_algo_end - timer_algo_start), 2),
-              file=timer_file)
-    else:
-        timer_algo_start = time.time()
-        command = f"{binary_dir}/bfs-cpu --algo=SyncDO --startNodes={start_node} -t=96 "
-        command += f"-statFile={output_dir}/bfs_do_{input_args['name']}_{trial}.stats {graph_path}"
-        command += f" --noverify"
-        os.system(command)
-        timer_algo_end = time.time()
-        print(f"Commands,", command, file=sys.stderr) 
-        print(f"BFS source,", start_node, file=sys.stderr)
-        print(f"BFS timer (s),",
-              round((timer_algo_end - timer_algo_start), 2),
-              file=timer_file)
-
-
-def run_sssp(graph_path, input_args, source_node_file, trial):
+def run_sssp(graph_path, input_args, source_node_file, trial, threads):
     start_node = input_args["source_node"]
     edge_prop_name = input_args["edge_wt"]
+    algo = "DeltaStep"
 
     if not source_node_file == "":
         if not os.path.exists(source_node_file):
@@ -80,10 +60,10 @@ def run_sssp(graph_path, input_args, source_node_file, trial):
                   file=sys.stderr)
 
         timer_algo_start = time.time()
-        command = f"{binary_dir}/sssp-cpu --algo=DeltaStep --delta={input_args['sssp_delta']} "
+        command = f"{binary_dir}/sssp-cpu --algo={algo} --delta={input_args['sssp_delta']} "
         command += f"--edgePropertyName={edge_prop_name} "
         command += f"--startNodesFile={source_node_file} "
-        command += f"-t=96 {graph_path} -statFile={output_dir}/sssp_{input_args['name']}_{trial}.stats"
+        command += f"-t=96 {graph_path} -statFile={output_dir}/{prefix}sssp_{input_args['name']}_{trial}.stats"
         os.system(command)
         timer_algo_end = time.time()
 
@@ -94,9 +74,9 @@ def run_sssp(graph_path, input_args, source_node_file, trial):
 
     else:
         timer_algo_start = time.time()
-        command = f"{binary_dir}/sssp-cpu --algo=DeltaStep --delta={input_args['sssp_delta']} "
+        command = f"{binary_dir}/sssp-cpu --algo={algo} --delta={input_args['sssp_delta']} "
         command += f"--edgePropertyName={edge_prop_name} --startNodes={start_node} "
-        command += f"-t=96 {graph_path} -statFile={output_dir}/sssp_{input_args['name']}_{trial}.stats"
+        command += f"-t=96 {graph_path} -statFile={output_dir}/{prefix}sssp_{input_args['name']}_{trial}.stats"
         os.system(command)
         timer_algo_end = time.time()
 
@@ -107,12 +87,12 @@ def run_sssp(graph_path, input_args, source_node_file, trial):
               file=timer_file)
 
 
-def run_jaccard(graph_path, input_args, trial):
+def run_jaccard(graph_path, input_args, trial, threads):
     compare_node = input_args["source_node"]
 
     timer_algo_start = time.time()
     command = f"{binary_dir}/jaccard-cpu --baseNode={compare_node} -t=96"
-    command += f" -statFile={output_dir}/jaccard_{input_args['name']}_{trial}.stats"
+    command += f" -statFile={output_dir}/{prefix}jaccard_{input_args['name']}_{trial}.stats"
     command += f" {graph_path}"
     os.system(command)
     timer_algo_end = time.time()
@@ -124,14 +104,14 @@ def run_jaccard(graph_path, input_args, trial):
           file=timer_file)
 
 
-def run_pagerank(graph_path, input_args, trial):
+def run_pagerank(graph_path, input_args, trial, threads):
     tolerance = 0.0001
     max_iteration = 1000
 
     timer_algo_start = time.time()
-    command = f"{binary_dir}/pagerank-cpu --algo=PullTopological --maxIterations={max_iteration}"
+    command = f"{binary_dir}/pagerank-cpu-numa-aware --algo=PullTopological --maxIterations={max_iteration}"
     command += f" --tolerance={tolerance} -t=96 {graph_path} --transposedGraph"
-    command += f" -statFile={output_dir}/pagerank_{input_args['name']}_{trial}.stats"
+    command += f" -statFile={output_dir}/{prefix}pagerank_{input_args['name']}_{trial}.stats"
     os.system(command)
     timer_algo_end = time.time()
 
@@ -141,9 +121,12 @@ def run_pagerank(graph_path, input_args, trial):
           file=timer_file)
 
 
-def run_bc(graph_path, input_args, source_node_file, trial):
+def run_bc(graph_path, input_args, source_node_file, trial, threads):
     start_node = input_args["source_node"]
     edge_prop_name = input_args["edge_wt"]
+
+    if "road" in input_args['name']:
+        threads = 16
 
     n = 4
     if not source_node_file == "":
@@ -152,11 +135,12 @@ def run_bc(graph_path, input_args, source_node_file, trial):
                   file=sys.stderr)
 
         timer_algo_start = time.time()
-        command = f"{binary_dir}/betweennesscentrality-cpu --algo=Level {graph_path}"
+        #command = f"{binary_dir}/betweennesscentrality-cpu --algo=Level {graph_path}"
+        command = f"{binary_dir}/betweennesscentrality-cpu-burning --algo=Level {graph_path}"
         command += f" --edgePropertyName={edge_prop_name} "
-        command += f"--startNodesFile={source_node_file} -t=96"
+        command += f"--startNodesFile={source_node_file} -t={threads}"
         command += f" --numberOfSources={n}"
-        command += f" --statFile={output_dir}/bc_{input_args['name']}_{trial}.stats"
+        command += f" --statFile={output_dir}/{prefix}bc_{input_args['name']}_{trial}.stats"
         os.system(command)
         timer_algo_end = time.time()
 
@@ -169,9 +153,9 @@ def run_bc(graph_path, input_args, source_node_file, trial):
         timer_algo_start = time.time()
         command = f"{binary_dir}/betweennesscentrality-cpu --algo=Level {graph_path}"
         command += f" --edgePropertyName={edge_prop_name} "
-        command += f"--startNodes={sources} -t=96"
+        command += f"--startNodes={sources} -t={threads}"
         command += f" --numberOfSources=1"
-        command += f" --statFile={output_dir}/bc_{input_args['name']}_{trial}.stats"
+        command += f" --statFile={output_dir}/{prefix}bc_{input_args['name']}_{trial}.stats"
         os.system(command)
         timer_algo_end = time.time()
 
@@ -182,7 +166,7 @@ def run_bc(graph_path, input_args, source_node_file, trial):
               file=timer_file)
 
 
-def run_tc(graph_path, input_args, trial):
+def run_tc(graph_path, input_args, trial, thread):
     timer_algo_start = time.time()
     command = f"{binary_dir}/triangle-counting-cpu --relabel {graph_path}"
     command += f" --algo=orderedCount --symmetricGraph -t=96"
@@ -196,11 +180,11 @@ def run_tc(graph_path, input_args, trial):
           file=timer_file)
 
 
-def run_cc(graph_path, input_args, trial):
+def run_cc(graph_path, input_args, trial, threads):
     timer_algo_start = time.time()
     command = f"{binary_dir}/connected-components-cpu --algo=Afforest -t=96"
     command += f" {graph_path} --symmetricGraph "
-    command += f"--statFile={output_dir}/cc_{input_args['name']}_{trial}.stats"
+    command += f"--statFile={output_dir}/cc_constantsampling_{input_args['name']}_{trial}.stats"
     os.system(command)
     timer_algo_end = time.time()
 
@@ -210,7 +194,7 @@ def run_cc(graph_path, input_args, trial):
           file=timer_file)
 
 
-def run_kcore(graph_path, input_args, trial):
+def run_kcore(graph_path, input_args, trial, threads):
     k = 10
     timer_algo_start = time.time()
     command = f"{binary_dir}/k-core-cpu --algo=Synchronous -t=96"
@@ -225,7 +209,7 @@ def run_kcore(graph_path, input_args, trial):
           file=timer_file)
 
 
-def run_louvain(graph_path, input_args, trial):
+def run_louvain(graph_path, input_args, trial, threads):
     edge_prop_name = input_args["edge_wt"]
 
     timer_algo_start = time.time()
@@ -246,7 +230,8 @@ def run_louvain(graph_path, input_args, trial):
 
 
 def run_all_gap(args):
-    print("Using threads:", args.threads, file=sys.stderr)
+    threads=args.threads
+    print("Using threads:", threads, file=sys.stderr)
     inputs = [
         {
             "name": "GAP-road",
@@ -269,7 +254,7 @@ def run_all_gap(args):
         {
             "name": "GAP-twitter",
             "symmetric_input": "GAP-twitter-symmetric",
-            "symmetric_clean_input": "GAP-twitter-symmetric-cleaned",
+            "symmetric_clean_input": "GAP-twitter-symmetric_cleaned",
             "transpose_input": "GAP-twitter-transpose",
             "source_node": 19058681,
             "edge_wt": "value",
@@ -284,6 +269,16 @@ def run_all_gap(args):
             "edge_wt": "value",
             "sssp_delta": 1,
         },
+        {
+            "name": "GAP-urand",
+            "symmetric_input": "GAP-urand",
+            "symmetric_clean_input": "GAP-urand",
+            "transpose_input": "GAP-urand",
+            "source_node": 57337430,
+            "edge_wt": "value",
+            "sssp_delta": 1,
+        },
+
     ]
 
     # Load our graph
@@ -298,20 +293,19 @@ def run_all_gap(args):
 
         if args.application == "bfs":
             for t in range(args.trials):
-#run_bfs(graph_path, input, args.source_nodes, t)
-              run_bfs_do(graph_path, input, args.source_nodes, t)
+              run_bfs(graph_path, input, args.source_nodes, t, threads)
 
         if args.application == "sssp":
             for t in range(args.trials):
-                run_sssp(graph_path, input, args.source_nodes, t)
+                run_sssp(graph_path, input, args.source_nodes, t, threads)
 
         if args.application == "jaccard":
             for t in range(args.trials):
-                run_jaccard(graph_path, input, t)
+                run_jaccard(graph_path, input, t, threads)
 
         if args.application == "bc":
             for t in range(args.trials):
-                run_bc(graph_path, input, args.source_nodes, t)
+                run_bc(graph_path, input, args.source_nodes, t, threads)
 
     elif args.application in ["tc"]:
         graph_path = f"{args.input_dir}/{input['symmetric_clean_input']}"
@@ -324,7 +318,7 @@ def run_all_gap(args):
 
         if args.application == "tc":
             for t in range(args.trials):
-                run_tc(graph_path, input, t)
+                run_tc(graph_path, input, t, threads)
 
     elif args.application in ["cc", "kcore", "louvain"]:
         graph_path = f"{args.input_dir}/{input['symmetric_input']}"
@@ -337,15 +331,15 @@ def run_all_gap(args):
 
         if args.application == "cc":
             for t in range(args.trials):
-                run_cc(graph_path, input, t)
+                run_cc(graph_path, input, t, threads)
 
         if args.application == "kcore":
             for t in range(args.trials):
-                run_kcore(graph_path, input, t)
+                run_kcore(graph_path, input, t, threads)
 
         if args.application == "louvain":
             for t in range(args.trials):
-                run_louvain(graph_path, input, t)
+                run_louvain(graph_path, input, t, threads)
 
     elif args.application in ["pagerank"]:
         ## Using transpose file pagerank pull which is expected
@@ -359,7 +353,7 @@ def run_all_gap(args):
               file=sys.stderr)
         if args.application == "pagerank":
             for t in range(args.trials):
-                run_pagerank(graph_path, input, t)
+                run_pagerank(graph_path, input, t, threads)
 
 
 if __name__ == "__main__":
@@ -382,7 +376,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--graph",
         default="GAP-road",
-        choices=["GAP-road", "GAP-kron", "GAP-twitter", "GAP-web"],
+        choices=["GAP-road", "GAP-kron", "GAP-twitter", "GAP-web", "GAP-urand" ],
         help="Graph name (default: %(default)s)",
     )
     parser.add_argument(
@@ -417,4 +411,5 @@ if __name__ == "__main__":
     print(f"Using input directory: ",parsed_args.input_dir," and ",
           "Threads: ",parsed_args.threads, file=sys.stderr)
 
+    threads = parsed_args.threads
     run_all_gap(parsed_args)
