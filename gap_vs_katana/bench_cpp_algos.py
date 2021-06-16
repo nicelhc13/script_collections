@@ -8,8 +8,8 @@ import time
 timer_file=sys.stderr
 
 binary_dir="/home/hlee/benchmarking/katana.binary"
-output_dir="/home/hlee/benchmarking/katana.output.0615"
-prefix="burning_"
+output_dir="/home/hlee/benchmarking/katana.output.0616"
+prefix=""
 
 def run_bfs(graph_path, input_args, source_node_file, trial, threads):
     start_node = input_args["source_node"]
@@ -53,6 +53,9 @@ def run_sssp(graph_path, input_args, source_node_file, trial, threads):
     start_node = input_args["source_node"]
     edge_prop_name = input_args["edge_wt"]
     algo = "DeltaStep"
+
+    if "kron" in input_args["name"] or "urand" in input_args["name"]:
+      algo = "DeltaStepFusion"
 
     if not source_node_file == "":
         if not os.path.exists(source_node_file):
@@ -109,7 +112,7 @@ def run_pagerank(graph_path, input_args, trial, threads):
     max_iteration = 1000
 
     timer_algo_start = time.time()
-    command = f"{binary_dir}/pagerank-cpu-numa-aware --algo=PullTopological --maxIterations={max_iteration}"
+    command = f"{binary_dir}/pagerank-cpu --algo=PullTopological --maxIterations={max_iteration}"
     command += f" --tolerance={tolerance} -t=96 {graph_path} --transposedGraph"
     command += f" -statFile={output_dir}/{prefix}pagerank_{input_args['name']}_{trial}.stats"
     os.system(command)
@@ -125,8 +128,10 @@ def run_bc(graph_path, input_args, source_node_file, trial, threads):
     start_node = input_args["source_node"]
     edge_prop_name = input_args["edge_wt"]
 
+    flags = ""
     if "road" in input_args['name']:
         threads = 16
+        flags += "--threadSpin" 
 
     n = 4
     if not source_node_file == "":
@@ -135,11 +140,11 @@ def run_bc(graph_path, input_args, source_node_file, trial, threads):
                   file=sys.stderr)
 
         timer_algo_start = time.time()
-        #command = f"{binary_dir}/betweennesscentrality-cpu --algo=Level {graph_path}"
-        command = f"{binary_dir}/betweennesscentrality-cpu-burning --algo=Level {graph_path}"
+        command = f"{binary_dir}/{prefix}betweennesscentrality-cpu --algo=Level {graph_path}"
         command += f" --edgePropertyName={edge_prop_name} "
         command += f"--startNodesFile={source_node_file} -t={threads}"
         command += f" --numberOfSources={n}"
+        command += f" {flags}"
         command += f" --statFile={output_dir}/{prefix}bc_{input_args['name']}_{trial}.stats"
         os.system(command)
         timer_algo_end = time.time()
@@ -151,7 +156,7 @@ def run_bc(graph_path, input_args, source_node_file, trial, threads):
     else:
         sources = [start_node]
         timer_algo_start = time.time()
-        command = f"{binary_dir}/betweennesscentrality-cpu --algo=Level {graph_path}"
+        command = f"{binary_dir}/{prefix}betweennesscentrality-cpu --algo=Level {graph_path}"
         command += f" --edgePropertyName={edge_prop_name} "
         command += f"--startNodes={sources} -t={threads}"
         command += f" --numberOfSources=1"
@@ -184,7 +189,7 @@ def run_cc(graph_path, input_args, trial, threads):
     timer_algo_start = time.time()
     command = f"{binary_dir}/connected-components-cpu --algo=Afforest -t=96"
     command += f" {graph_path} --symmetricGraph "
-    command += f"--statFile={output_dir}/cc_constantsampling_{input_args['name']}_{trial}.stats"
+    command += f"--statFile={output_dir}/cc_{input_args['name']}_{trial}.stats"
     os.system(command)
     timer_algo_end = time.time()
 
