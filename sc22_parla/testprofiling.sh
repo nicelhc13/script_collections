@@ -2,21 +2,16 @@
 
 GPU_COMBS=( "0" "0,1" "0,1,2,3" )
 NUM_GPUS=( "1g" "2g" "4g" )
-#GPU_COMBS=( "0,1,2,3" )
-#NUM_GPUS=("4g" )
-DEPTHS=( "2000" )
-INPUT_SIZES=( "100MB" )
-#DEPTHS=( "2" "2000" )
-#INPUT_SIZES=( "100KB" "100MB" )
-#DEPTHS=( "2" )
-#INPUT_SIZES=( "100KB" )
+#DEPTHS=( "2000" )
+#INPUT_SIZES=( "100MB" )
+DEPTHS=( "2" )
+INPUT_SIZES=( "100KB" )
 INPUT_DIR="inputs"
 DATE=`date +"%Y_%m%d"`
 echo $DATE
-OUTPUT_DIR="profiling_results_${DATE}"
+OUTPUT_DIR="profiling_results_$DATE"
 
 export PYTHONPATH="../Parla.py"
-export PARLA_PROFILE_MEMORY=1 
 
 rm -rf $OUTPUT_DIR
 mkdir $OUTPUT_DIR
@@ -28,15 +23,20 @@ for depth_idx in "${!DEPTHS[@]}"; do
     if [[ $gpath == *".analysis"* ]]; then
       continue
     fi
-#commands="python run.py -graph "$gpath" -d ${DEPTH} --verbose -loop 20" 
-    commands="python run.py -graph "$gpath" -d ${DEPTH} -loop 5" 
+    if [[ $gpath == *"indepenent"* ]]; then
+      continue
+    elif [[ $gpath == *"random"* ]]; then
+      continue
+    elif [[ $gpath == *"reduce"* ]]; then
+      continue
+    fi
+    commands="python run.py -graph "$gpath" -d ${DEPTH} --verbose -loop 20" 
     IFS="/"
     read -a gpath_split <<< "$gpath"
     IFS="."
     read -a gfname <<< "${gpath_split[1]}"
     unset IFS 
     for data_move_mode in 1 2; do
-#for data_move_mode in 2; do
       echo "data mode is tested:" $data_move_mode
       data_move_flag=""
       out_fname_post=""
