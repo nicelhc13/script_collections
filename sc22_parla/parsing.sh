@@ -5,7 +5,9 @@ OUTPUT="parsed_results.out"
 
 rm $OUTPUT
 
-for fpath in profiling_results_2022_0327/*; do
+INPUT=$1
+
+for fpath in $INPUT/*; do
   IFS="/"
   read -a fname <<< "$fpath"
   fname=${fname[1]}
@@ -28,7 +30,8 @@ for fpath in profiling_results_2022_0327/*; do
   else
     afname+=".gph.analysis"
   fi
-  commands="python parser.py -actual "$fpath" -expect inputs/"$afname" -output="$OUTPUT
+#commands="python parser.py -actual "$fpath" -expect inputs/"$afname" -output="$OUTPUT
+  commands="python parser_median.py -actual "$fpath" -expect inputs/"$afname" -output="$OUTPUT" -branch=$2 -policy=$3"
 #commands="python parser_withoutexp.py -actual "$fpath" -output="$OUTPUT
 #echo $commands
   $commands
