@@ -1,4 +1,5 @@
 import argparse
+import statistics
 
 parse = argparse.ArgumentParser(description='Parse and extract actual/expected runtime')
 parse.add_argument('-actual', metavar='actual', type=str, help='The output file of run.py')
@@ -18,13 +19,21 @@ def parse(ap: str, ep: str, op: str, policy: str, branch: str):
   # Parse time information.
   with open(ap) as f:
     actual_summary = f.readlines()
-    actual_summary = actual_summary[-2:-1]
+    #actual_summary = actual_summary[-2:-1]
   with open(ep) as f:
     expect_summary = f.readlines()
     expect_summary = expect_summary[-3:-2]
 
-  actual_median = actual_summary[0].split(" = ")[-1].split("\n")[0]
+  actual_time_list = []
+  for line in actual_summary:
+      if not "Iteration 0" in line and not "Starting" in line and \
+        "Iteration " in line and not "Outer " in line:
+          split_line = line.split("Graph Execution Time:  ")[1]
+          split_line = split_line.split(" seconds")[0]
+          second = float(split_line)
+          actual_time_list.append(second)
 
+  actual_median = str(statistics.median(actual_time_list))
   expect_summary = expect_summary[0].split(': ')[1]
   expect_summary = expect_summary.split(' seconds')[0]
 
