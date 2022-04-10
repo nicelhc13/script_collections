@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GRAPH_INPUT_DIR="inputs_new"
+GRAPH_INPUT_DIR="inputs"
 
 export PYTHONPATH=../Parla.py
 
@@ -13,7 +13,7 @@ for gpath in ${GRAPH_INPUT_DIR}/*.gph; do
       $commands > $gpath"."$g".analysis"
     done
   else
-    commands="python viz.py -graph "$gpath" -data 1"
+    commands="python viz.py -graph "$gpath" -data 1 --no-plot True"
     echo $commands
     $commands > $gpath".analysis"
   fi

@@ -1,10 +1,15 @@
 GRAPH_GENERATORS=( "generate_serial_graph.py" "generate_independent_graph.py" 
                    "generate_random_graph.py" "generate_reduce_graph.py" )
+
+#GRAPH_GENERATORS=( "generate_serial_graph.py" ) 
 GRAPH_TYPES=( "serial" "independent" "random" "reduce" )
+#GRAPH_TYPES=( "serial" )
 #SLEEP_KNOBS=( 50000 5000 500 50 )
-SLEEP_KNOBS=( 50000 )
+#SLEEP_KNOBS=( 50000 )
+SLEEP_KNOBS=( 16000 )
 #COMPUTATION_TYPE=( "l" "m" "ms" "s" )
-COMPUTATION_TYPE=( "l" )
+#COMPUTATION_TYPE=( "l" )
+COMPUTATION_TYPE=( "80%" )
 # 0 = CPU, 1 = GPU
 #ARCH_TYPE=( "0" "1" )
 ARCH_TYPE=( "1" )
@@ -40,7 +45,7 @@ for gen_idx in "${!GRAPH_GENERATORS[@]}"; do
       ARCH_NO=${ARCH_TYPE[$arch_idx]}
       ARCH=${ARCH_NAME[$arch_idx]}
       OUTPUT_FNAME=${GRAPH_TYPE}"_"${COMPUTE_WEIGHT_TYPE}"_"${ARCH}."gph"
-      OUTPUT_DIR="inputs_new/"
+      OUTPUT_DIR="inputs/"
       ARCH_FLAGS=" -location "$ARCH_NO
       FULL_COMMANDS="python graphs/${GRAPH_GENERATORS[$gen_idx]} "${FLAGS}${ARCH_FLAGS}" -weight "$COMPUTE_WEIGHT" -output "$OUTPUT_DIR$OUTPUT_FNAME
       echo $FULL_COMMANDS  >> used_generating_commands.out

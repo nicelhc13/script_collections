@@ -1,7 +1,8 @@
 #!/bin/bash
 
-INPUT_DIR="profiling_results_2022_0313"
-GRAPH_INPUT_DIR="inputs_new"
+DATE=`date +"%Y_%m%d"`
+INPUT_DIR="profiling_results_$DATE"
+GRAPH_INPUT_DIR="inputs"
 
 export PYTHONPATH="../Parla.py"
 for gpath in ${INPUT_DIR}/*; do
