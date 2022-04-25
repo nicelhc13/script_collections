@@ -15,8 +15,16 @@ for fpath in $INPUT/*; do
   read -a etype <<< "${fname}"
   unset IFS
   afname=$etype
+
+  echo ">>>>>>>> "$fpath
+
+  ptype="user"
+  if [[ $fname == *"policy"* ]]; then
+    ptype="policy"
+  fi
+
   if [[ $etype == *"_gpu_"* ]]; then
-    afname=( "${etype%%"$delim"*}" ) #random_l
+    afname=( "${etype%%"$delim"*}" ) # independent_80%
     etype=${etype#*"$delim"}
     IFS="_" # 100KB_1g_eagerdm
     read -a etype <<< "${etype}"
@@ -24,14 +32,16 @@ for fpath in $INPUT/*; do
     etype=${etype[1]}
     IFS="g"
     read -a num_gpu <<< $etype # 
+
     afname=( "${afname%%"_"$num_gpu"g"*}" )
-    afname+="_gpu.gph."$num_gpu".analysis"
+    afname+="_gpu."$ptype".gph."$num_gpu".analysis"
     unset IFS
   else
-    afname+=".gph.analysis"
+    afname+="."$ptype".gph.analysis"
   fi
+
 #commands="python parser.py -actual "$fpath" -expect inputs/"$afname" -output="$OUTPUT
-  commands="python parser_median.py -actual "$fpath" -expect inputs/"$afname" -output="$OUTPUT" -branch=$2 -policy=$3"
+  commands="python parser_extract_median.py -actual "$fpath" -expect inputs/"$afname" -output="$OUTPUT" -branch=$2"
 #commands="python parser_withoutexp.py -actual "$fpath" -output="$OUTPUT
 #echo $commands
   $commands

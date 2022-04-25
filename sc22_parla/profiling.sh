@@ -4,8 +4,8 @@ GPU_COMBS=( "0" "0,1" "0,1,2,3" )
 NUM_GPUS=( "1g" "2g" "4g" )
 #GPU_COMBS=( "0,1,2,3" )
 #NUM_GPUS=("4g" )
-DEPTHS=( "2000" )
-INPUT_SIZES=( "100MB" )
+DEPTHS=( "1000" )
+INPUT_SIZES=( "50MB" )
 #DEPTHS=( "2" "2000" )
 #INPUT_SIZES=( "100KB" "100MB" )
 #DEPTHS=( "2" )
@@ -28,8 +28,14 @@ for depth_idx in "${!DEPTHS[@]}"; do
     if [[ $gpath == *".analysis"* ]]; then
       continue
     fi
+
+    USER_FLAG=" "
+    if [[ $gpath == *"user"* ]]; then
+      USER_FLAG+=" -user 1 "
+    fi
+
 #commands="python run.py -graph "$gpath" -d ${DEPTH} --verbose -loop 20" 
-    commands="python run.py -graph "$gpath" -d ${DEPTH} -loop 5" 
+    commands="python run.py -graph "$gpath" -d ${DEPTH} -loop 6"$USER_FLAG" -reinit 1" 
     IFS="/"
     read -a gpath_split <<< "$gpath"
     IFS="."
@@ -48,6 +54,9 @@ for depth_idx in "${!DEPTHS[@]}"; do
         echo "lazy data mode is enabled:" $data_move_mode
         out_fname_post="_lazydm"
         data_move_flag=" --check"
+      fi
+      if [[ $gpath == *"user"* ]]; then
+        out_fname_post+=".user"
       fi
       if [[ $gpath == *"_gpu."* ]]; then
         for exp_type in "${!NUM_GPUS[@]}"; do
